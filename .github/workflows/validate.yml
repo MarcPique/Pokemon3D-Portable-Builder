@@ -1,0 +1,65 @@
+name: Validate repository
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject ROMs, binaries, local covers and generated caches
+        shell: pwsh
+        run: |
+          $badExt = @('.gb','.gbc','.gba','.z64','.n64','.v64','.rom',
+                      '.exe','.dll','.love','.7z','.rar')
+
+          $bad = @(Get-ChildItem -Recurse -File | Where-Object {
+            $badExt -contains $_.Extension.ToLowerInvariant()
+          })
+
+          $bad += @(Get-ChildItem covers -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -ne 'README.md' })
+
+          $bad += @(Get-ChildItem -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object {
+              $_.FullName -match '[\\/](red|blue|yellow)[\\/].*[\\/](generated)[\\/]'
+            })
+
+          if ($bad.Count -gt 0) {
+            $bad | ForEach-Object { Write-Error "Forbidden file: $($_.FullName)" }
+            exit 1
+          }
+
+      - name: Parse builder.ps1
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path './builder.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+
+          if ($errors.Count -gt 0) {
+            $errors | Format-List | Out-String | Write-Error
+            exit 1
+          }
+
+      - name: Check BAT has no UTF-8 BOM
+        shell: pwsh
+        run: |
+          $bytes = [IO.File]::ReadAllBytes(
+            (Resolve-Path './BUILD_POKEMON_3D_PORTABLE_AUTO.bat')
+          )
+
+          if ($bytes.Length -ge 3 -and
+              $bytes[0] -eq 0xEF -and
+              $bytes[1] -eq 0xBB -and
+              $bytes[2] -eq 0xBF) {
+            throw 'BAT contains a UTF-8 BOM.'
+          }

@@ -1,0 +1,61 @@
+# ROMs / cartridges
+*.gb
+*.gbc
+*.gba
+*.z64
+*.n64
+*.v64
+*.rom
+
+# Optional local copyrighted artwork
+covers/*.jpg
+covers/*.jpeg
+covers/*.png
+covers/*.webp
+!covers/README.md
+
+# Build/dependency cache
+_deps/
+_work/
+dist/
+out/
+build/
+release/
+
+# Generated/binary artifacts
+*.exe
+*.dll
+*.love
+*.zip
+*.7z
+*.rar
+*.pdb
+*.tmp
+
+# ROM-derived cache/data
+red/
+blue/
+yellow/
+gold/
+silver/
+crystal/
+rom-cache.complete
+assets/generated/
+data/generated/
+
+# Runtime/save state
+saves/
+launcher.ini
+options.lua
+save.lua
+save.lua.bak
+portable.txt
+
+# Logs
+*.log
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
